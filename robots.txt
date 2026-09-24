@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://aimanebenkhadda.github.io/sitemap.xml
