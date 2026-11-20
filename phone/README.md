@@ -39,6 +39,6 @@ python blender/bake.py --size 2048 --spp 64   # bakes lighting -> out/*.png + ou
 npx gltfpack -i out/office.glb -o assets/office.glb -cc -kn -km -kv -vtf
 ```
 
-Convert the baked PNGs to WebP (`phone`, `props`, `room`, and `floor_ratio` saved as `floor.webp`) into `assets/`.
+Run `python blender/dilate.py out/office.glb out` to fill the empty texels, then convert the `*_filled.png` files to WebP (`phone`, `props`, `room`, and `floor_ratio` saved as `floor.webp`) into `assets/`.
 
 three.js is © its authors, MIT License.
