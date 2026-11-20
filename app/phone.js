@@ -1,6 +1,6 @@
-/* Phone mode for the 3D portfolio.
- * On phones the monitor is too small to use, so after the camera zooms into it
- * the computer screen opens full-screen. "Back to the desk" returns to the 3D room.
+/* Phones are sent to the phone version (/phone/).
+ * If someone still opens the 3D desk on a phone (?desk=1), the monitor is too small
+ * to use, so after the camera zooms into it the computer screen opens full-screen.
  * Desktop and tablets are untouched. */
 (function () {
   "use strict";
@@ -8,6 +8,20 @@
   var phoneQuery = window.matchMedia(
     "(max-width: 767px), (pointer: coarse) and (max-height: 520px)"
   );
+
+  // Phones get their own version: a terrace table in Agadir and a phone running AïmaneOS.
+  // "?desk=1" keeps the 3D desk on a phone (for people who want the computer version).
+  if (phoneQuery.matches && !/[?&]desk=1/.test(location.search)) {
+    var l = "en";
+    try {
+      var p = new URLSearchParams(location.search).get("lang");
+      var s = localStorage.getItem("aos-lang");
+      l = p === "fr" || p === "en" ? p : s === "fr" || s === "en" ? s
+        : (navigator.language || "en").toLowerCase().indexOf("fr") === 0 ? "fr" : "en";
+    } catch (e) {}
+    location.replace("phone/?lang=" + l);
+    return;
+  }
   var TEXT = {
     en: { open: "▶ Turn on the computer", back: "← Back to the desk" },
     fr: { open: "▶ Allumer l’ordinateur", back: "← Retour au bureau" },
