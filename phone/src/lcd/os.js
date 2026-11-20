@@ -2,6 +2,16 @@
 import { FB, W, H } from './fb.js';
 import { ICONS, SMALL } from './icons.js';
 import { T, LINKS } from '../content.js';
+import { PICS } from './pics.js';
+
+const picCache = {};
+function pic(id) {
+  if (picCache[id]) return picCache[id];
+  const p = PICS[id], raw = atob(p.b), stride = Math.ceil(p.w / 8), bits = new Uint8Array(p.w * p.h);
+  for (let y = 0; y < p.h; y++) for (let x = 0; x < p.w; x++)
+    bits[y * p.w + x] = (raw.charCodeAt(y * stride + (x >> 3)) >> (7 - (x & 7))) & 1;
+  return (picCache[id] = { w: p.w, h: p.h, bits });
+}
 
 const HEAD = 12;              // title row + rule
 const FOOT = 12;              // softkey labels + rule
@@ -257,7 +267,7 @@ class Doc extends Screen {
   soft() { return this.opt.soft ? this.opt.soft() : ['', this.L.backKey]; }
   layout(fb) {
     const rows = [];
-    const add = (h, f) => rows.push({ h, f });
+    const add = (h, f, tap) => rows.push({ h, f, tap });
     for (const b of this.opt.blocks()) {
       if (b.t === 'gap') add(b.h || 4, () => {});
       else if (b.t === 'h') { add(3, () => {}); fb.wrap(b.s, TW - 2, { bold: true }).forEach(l => add(10, (fb, y) => fb.text(l, 2, y, { bold: true }))); }
@@ -313,7 +323,20 @@ class Doc extends Screen {
         add(10, (fb, y) => fb.text(b.when, 12, y));
         add(4, (fb, y) => fb.dotted(2, y + 2, TW - 2));
       } else if (b.t === 'link') {
-        add(12, (fb, y) => { fb.sprite(SMALL.link, 3, y + 3); fb.text(b.s, 11, y + 1); });
+        add(12, (fb, y) => { fb.sprite(SMALL.link, 3, y + 3); fb.text(b.s, 11, y + 1); }, b.tap);
+      } else if (b.t === 'pic') {
+        const st = b.st, n = b.ids.length;
+        add(3, () => {});
+        const hMax = Math.max(...b.ids.map(id => pic(id).h));
+        add(hMax + 3, (fb, y) => {
+          const p = pic(b.ids[st.pi]);
+          fb.rect(0, y, p.w + 2, p.h + 2);
+          for (let j = 0; j < p.h; j++) for (let i = 0; i < p.w; i++) if (p.bits[j * p.w + i]) fb.set(1 + i, y + 1 + j);
+        }, b.tap);
+        add(11, (fb, y) => {
+          fb.text(n > 1 ? `◂ ${st.pi + 1}/${n} ▸` : '1/1', 1, y + 1);
+          fb.text(this.L.inColour, TW, y + 1, { align: 'right' });
+        }, b.tap);
       }
     }
     this.rows = rows;
@@ -333,6 +356,12 @@ class Doc extends Screen {
   }
   tap(x, y) {
     if (y > H - FOOT) return x < W / 2 ? this.key('soft_l') : this.os.back();
+    if (y < BY || !this.rows) return;
+    let yy = BY + 2 - this.y;
+    for (const r of this.rows) {
+      if (y >= yy && y < yy + r.h) { if (r.tap) r.tap(x, y - yy); return; }
+      yy += r.h;
+    }
   }
   drag(dy) { this.y -= dy; this.clamp(); }
   draw(fb) {
@@ -366,26 +395,37 @@ class Projects extends List {
 class Project extends Doc {
   constructor(os, i) {
     const p = () => os.L.projects[i];
+    const st = { pi: 0 };
+    const photos = () => { const q = p(); if (q.pics) os.o.onPhotos(q.pics, st.pi, q.short); };
+    const github = () => { if (p().url) os.open(p().url); };
     super(os, {
       title: () => p().short,
       blocks: () => {
         const q = p(), out = [{ t: 'h', s: q.name }, { t: 'p', s: q.stack }];
+        if (q.pics) out.push({ t: 'pic', ids: q.pics, st, tap: photos });
         if (q.chart) out.push({ t: 'chart', c: q.chart });
         if (q.kpis) out.push({ t: 'kpis', k: q.kpis });
         q.bullets.forEach(s => out.push({ t: 'b', s }));
-        if (q.url) { out.push({ t: 'gap', h: 4 }); out.push({ t: 'link', s: 'GitHub' }); }
+        if (q.url) { out.push({ t: 'gap', h: 4 }); out.push({ t: 'link', s: 'GitHub', tap: github }); }
         return out;
       },
-      soft: () => [p().url ? 'GitHub' : '', os.L.backKey],
-      left: () => { if (p().url) os.open(p().url); },
+      soft: () => [p().pics ? os.L.photos : p().url ? 'GitHub' : '', os.L.backKey],
+      left: () => (p().pics ? photos() : github()),
       key: k => {
-        if (k === 'soft_r') return false;
-        const n = os.L.projects.length;
-        if (k === '#' || k === 'hash') { os.replace(new Project(os, (i + 1) % n)); return true; }
-        if (k === '*' || k === 'star') { os.replace(new Project(os, (i + n - 1) % n)); return true; }
+        const q = p(), n = os.L.projects.length;
+        if (k === 'call') { github(); return true; }
+        if (q.pics && (k === 'left' || k === 'right')) {
+          st.pi = (st.pi + (k === 'right' ? 1 : q.pics.length - 1)) % q.pics.length;
+          return true;
+        }
+        if (k === 'hash') { os.replace(new Project(os, (i + 1) % n)); return true; }
+        if (k === 'star') { os.replace(new Project(os, (i + n - 1) % n)); return true; }
         return false;
       },
     });
+  }
+  swipe(d) {
+    if ((d === 'left' || d === 'right') && this.opt.blocks().some(b => b.t === 'pic')) this.key(d === 'left' ? 'right' : 'left');
   }
 }
 

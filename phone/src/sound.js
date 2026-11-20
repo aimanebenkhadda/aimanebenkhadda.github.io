@@ -3,11 +3,23 @@ const KEY_HZ = { '1': 1209, '2': 1336, '3': 1477, '4': 1209, '5': 1336, '6': 147
 
 export class Beeper {
   constructor() { this.ctx = null; this.on = true; }
+  // must run inside a tap/click: iPhones only start web audio from a user gesture
   unlock() {
-    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    try { this.ctx = new AC(); } catch (e) { this.ctx = null; }
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      try { this.ctx = new AC(); } catch (e) { this.ctx = null; return; }
+    }
+    const c = this.ctx;
+    if (c.state !== 'running') { try { c.resume(); } catch (e) {} }
+    if (!this.primed) {
+      // play one silent sample right away: older iPhones only unlock audio this way
+      try {
+        const b = c.createBuffer(1, 1, 22050), s = c.createBufferSource();
+        s.buffer = b; s.connect(c.destination); s.start(0);
+        this.primed = true;
+      } catch (e) {}
+    }
   }
   tone(hz, dur, vol = 0.035, when = 0) {
     if (!this.on || !this.ctx) return;

@@ -11,7 +11,7 @@ import { T, LINKS } from './content.js';
 import { FB } from './lcd/fb.js';
 import { PHOTO } from './lcd/photo.js';
 
-const V = '2';
+const V = '3';
 const BG_HEX = '#e9e2d6';
 const $ = s => document.querySelector(s);
 const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem('ab95.' + k); localStorage.setItem('ab95.' + k, v); } catch (e) { return null; } };
@@ -47,7 +47,7 @@ renderer.toneMapping = THREE.NoToneMapping;
 const scene = new THREE.Scene();
 const BG = new THREE.Color(BG_HEX);
 scene.background = BG;
-const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 60);
+const camera = new THREE.PerspectiveCamera(40, 1, 0.12, 12);   // near plane at 12 cm: keeps the tiny key labels from flickering on phones with a 16-bit depth buffer
 
 // ------------------------------------------------------------------ loading
 const manager = new THREE.LoadingManager();
@@ -179,6 +179,7 @@ const os = new PhoneOS({
     if (!w) window.location.href = url;
   },
   onExit: () => goDesk(),
+  onPhotos: (ids, i, title) => openPhotos(ids, i, title),
   onSetting: (k, v) => {
     if (k === 'lang') setLang(v);
     if (k === 'tones') { opts.tones = v; beeper.on = v; ls('tones', v ? '1' : '0'); syncHud(); }
@@ -310,6 +311,82 @@ function goDesk() {
 }
 ui.back.addEventListener('click', () => { os.home(); goDesk(); });
 
+// ------------------------------------------------------------------ steam from the coffee
+const steam = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.08, 0.19, 1, 1).translate(0, 0.095, 0),
+  new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false,
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `uniform float uTime; varying vec2 vUv;
+      float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+      float fbm(vec2 p){ float v = 0.0, a = 0.5; for (int i = 0; i < 4; i++) { v += a * n(p); p = p * 2.03 + 1.7; a *= 0.5; } return v; }
+      void main(){
+        float y = vUv.y, t = uTime;
+        float bend = (fbm(vec2(y * 1.3 - t * 0.10, 4.0)) - 0.5) * 0.9 * y;     // the column drifts more as it rises
+        float x = vUv.x - 0.5 - bend;
+        float wisp = fbm(vec2(x * 4.0, y * 2.6 - t * 0.32));
+        wisp = smoothstep(0.36, 0.68, wisp);
+        float width = mix(0.2, 0.46, y);
+        float side = 1.0 - smoothstep(0.0, width, abs(x));
+        float fade = smoothstep(0.0, 0.1, y) * (1.0 - smoothstep(0.5, 0.97, y));
+        float a = min(1.0, wisp * side * fade * 1.15);
+        gl_FragColor = vec4(vec3(1.0), a);
+        #include <colorspace_fragment>
+      }`,
+  }));
+steam.renderOrder = 2;
+steam.visible = false;
+scene.add(steam);
+manager.onLoad = (prev => () => {
+  const mug = world.root && world.root.getObjectByName('mug_root');
+  if (mug) {
+    mug.updateMatrixWorld(true);
+    steam.position.setFromMatrixPosition(mug.matrixWorld);
+    steam.position.y += 0.076;
+    steam.visible = true;
+  }
+  prev();
+})(manager.onLoad);
+
+// ------------------------------------------------------------------ photo prints of the project screenshots
+const ph = { box: $('#photos'), img: $('#photos img'), cap: $('#photos .t'), num: $('#photos .n'), full: $('#photos .full'), ids: [], i: 0, title: '' };
+function showPhoto() {
+  const id = ph.ids[ph.i];
+  ph.img.src = `../app/img/${id}.webp`;
+  ph.img.alt = `${ph.title} ${ph.i + 1}`;
+  ph.cap.textContent = ph.title;
+  ph.num.textContent = ph.ids.length > 1 ? `${ph.i + 1} / ${ph.ids.length}` : '';
+  ph.full.href = ph.img.src;
+  ph.box.classList.toggle('single', ph.ids.length < 2);
+  ph.box.querySelector('.print').classList.remove('flip'); void ph.box.offsetWidth; ph.box.querySelector('.print').classList.add('flip');
+}
+function openPhotos(ids, i, title) {
+  Object.assign(ph, { ids, i, title });
+  showPhoto();
+  ph.box.hidden = false;
+  requestAnimationFrame(() => ph.box.classList.add('open'));
+}
+function closePhotos() {
+  ph.box.classList.remove('open');
+  setTimeout(() => { if (!ph.box.classList.contains('open')) ph.box.hidden = true; }, 350);
+}
+function stepPhoto(d) { ph.i = (ph.i + d + ph.ids.length) % ph.ids.length; showPhoto(); }
+$('#photos .prev').addEventListener('click', e => { e.stopPropagation(); stepPhoto(-1); });
+$('#photos .next').addEventListener('click', e => { e.stopPropagation(); stepPhoto(1); });
+$('#photos .close').addEventListener('click', e => { e.stopPropagation(); closePhotos(); });
+ph.box.addEventListener('click', e => { if (e.target === ph.box) closePhotos(); });
+let phX = null;
+ph.box.addEventListener('pointerdown', e => { phX = e.clientX; });
+ph.box.addEventListener('pointerup', e => {
+  if (phX === null) return;
+  const dx = e.clientX - phX; phX = null;
+  if (Math.abs(dx) > 40) stepPhoto(dx < 0 ? 1 : -1);
+});
+const photosOpen = () => !ph.box.hidden;
+
 // ------------------------------------------------------------------ input
 const ray = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
@@ -370,6 +447,7 @@ canvas.addEventListener('pointermove', e => {
   }
 });
 canvas.addEventListener('pointerup', e => {
+  beeper.unlock();
   if (!ptr || ptr.id !== e.pointerId) return;
   const p = ptr; ptr = null;
   if (p.moved > 10 || performance.now() - p.t > 700) return;
@@ -393,6 +471,13 @@ const KEYMAP = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight
   Backspace: 'soft_r', Escape: 'end', '*': 'star', '#': 'hash', s: 'soft_l', d: 'soft_r', c: 'call', e: 'end' };
 window.addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (photosOpen()) {
+    if (e.key === 'Escape' || e.key === 'Backspace') closePhotos();
+    else if (e.key === 'ArrowRight') stepPhoto(1);
+    else if (e.key === 'ArrowLeft') stepPhoto(-1);
+    e.preventDefault();
+    return;
+  }
   if (mode === 'start' && e.key === 'Enter') { ui.go.click(); return; }
   if (mode === 'desk' && (e.key === 'Enter' || e.key === ' ')) { goPhone(); e.preventDefault(); return; }
   if (mode !== 'phone') return;
@@ -428,6 +513,11 @@ function frame(now) {
   }
   const lt = os.on ? 1 : 0, u = lcd.uniforms.uLight;
   u.value += (lt - u.value) * Math.min(1, dt * 4);
+  // steam turns to face the camera
+  if (steam.visible) {
+    steam.material.uniforms.uTime.value = now / 1000;
+    steam.rotation.y = Math.atan2(camera.position.x - steam.position.x, camera.position.z - steam.position.z);
+  }
   // clock hands follow the real time
   if (world.hands.sec) {
     const d = new Date(), s = d.getSeconds() + d.getMilliseconds() / 1000, m = d.getMinutes() + s / 60, h = (d.getHours() % 12) + m / 60;

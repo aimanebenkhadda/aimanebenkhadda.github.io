@@ -276,7 +276,7 @@ def mug(x, y, rz):
         smooth(p, 50)
     return root
 
-mug(0.135, 0.105, R(-35))
+mug(0.108, 0.112, R(-35))
 
 # --- legal pad + pencil
 def legal_pad(x, y, rz):
@@ -381,9 +381,16 @@ def alarm_clock(x, y, rz):
         bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, 0), plane_no=(0, 0, 1), clear_inner=True)
         bm.to_mesh(bell.data); bm.free()
         sol = bell.modifiers.new('S', 'SOLIDIFY'); sol.thickness = 0.0015
-        bell.location = (sx * 0.026, 0.002, cz + 0.036)
-        bell.rotation_euler = (0, sx * R(-38), 0)
+        ang = R(40)
+        rr = R0 + 0.011
+        bell.location = (sx * math.sin(ang) * rr, 0.002, cz + math.cos(ang) * rr)
+        bell.rotation_euler = (0, sx * ang, 0)   # dome tilted outwards, open side towards the clock
         smooth(bell, 60)
+        # stem from the clock body to the bell, and a little knob on top of the bell
+        stem = cylinder(f'bellstem{sx}', 0.0018, rr - R0 + 0.006, 12, (0, 0, 0), (0, sx * ang, 0), M['chrome'], C_PROPS)
+        stem.location = (sx * math.sin(ang) * (R0 + (rr - R0) / 2 - 0.002), 0.002, cz + math.cos(ang) * (R0 + (rr - R0) / 2 - 0.002))
+        knob = sphere(f'bellknob{sx}', 0.0032, (sx * math.sin(ang) * (rr + 0.0225), 0.002, cz + math.cos(ang) * (rr + 0.0225)), (1, 1, 1), M['chrome'], C_PROPS, 16, 8)
+        parts += [stem, knob]
         foot = sphere(f'cfoot{sx}', 0.007, (sx * 0.026, 0.0, 0.009), (1, 1, 1), M['chrome'], C_PROPS, 16, 10)
         leg = cylinder(f'cleg{sx}', 0.0022, 0.016, 12, (sx * 0.024, 0.0, 0.016), (0, sx * R(20), 0), M['chrome'], C_PROPS)
         parts += [bell, foot, leg]

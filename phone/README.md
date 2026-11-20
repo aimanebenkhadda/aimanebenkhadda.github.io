@@ -4,7 +4,7 @@ Phones that open the main site are sent here (`app/phone.js`). It is its own sma
 
 - **The room**: an old writing desk in a quiet cream room, with a banker's lamp, an alarm clock that shows the real time, a coffee mug, a legal pad, books, a plant and the AB-95 standing in its charging dock.
 - **The phone**: the AB-95 is an original candy-bar phone designed for this site, with a monochrome LCD and a real keypad. Tap it to pick it up, then use the keys or the screen.
-- **The software** (on the LCD): idle screen with the clock, a 3 × 3 menu, Profile, Projects (with small charts), Messages (experience and education, as SMS), Highlights, Snake, Contacts, CV and Settings (language, key tones, backlight colour). English and French.
+- **The software** (on the LCD): idle screen with the clock, a 3 × 3 menu, Profile, Projects (with small charts and pixel pictures of the dashboards; **Photos** opens the real screenshots in colour), Messages (experience and education, as SMS), Highlights, Snake, Contacts, CV and Settings (language, key tones, backlight colour). English and French.
 
 ## Files
 
@@ -17,6 +17,7 @@ Phones that open the main site are sent here (`app/phone.js`). It is its own sma
 | `assets/*.webp` | Lighting baked in Blender for the phone, the props, the desk and the floor shadow |
 | `src/` | App source: `main.js` (3D scene, camera, touch), `content.js` (all texts, EN/FR), `lcd/` (pixel font, screen, phone software, Snake) |
 | `blender/` | Python scripts that model the scene and bake its lighting with Blender 4.2 |
+| `tools/pics.py` | Turns the screenshots in `app/img/` into the 1-bit pictures in `src/lcd/pics.js` (run it again after changing a screenshot) |
 
 ## Change the texts
 
