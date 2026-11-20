@@ -1,12 +1,26 @@
-# AïmaneOS Phone
+# AB-95 · the phone version
 
-The phone version of the portfolio. Phones that open the main site are sent here.
+Phones that open the main site are sent here (`app/phone.js`). It is its own small world, separate from the computer version:
 
-- **3D room** (`src/scene.js`): a terrace table in Agadir at sunset, with mint tea, a teapot, a lantern, a notebook and the phone. Everything is built in code with three.js, so there are no model files.
-- **Phone OS** (`src/main.js`, `phone.css`): lock screen, home screen and apps. The apps open the same AïmaneOS content as the computer version (`../os/`), so projects and CV stay in sync.
-- **Wallpaper and icons** (`src/wallpaper.js`, `src/icons.js`): pixel art. The first seven icons are the AïmaneOS desktop icons.
+- **The room**: an old writing desk in a quiet cream room, with a banker's lamp, an alarm clock that shows the real time, a coffee mug, a legal pad, books, a plant and the AB-95 standing in its charging dock.
+- **The phone**: the AB-95 is an original candy-bar phone designed for this site, with a monochrome LCD and a real keypad. Tap it to pick it up, then use the keys or the screen.
+- **The software** (on the LCD): idle screen with the clock, a 3 × 3 menu, Profile, Projects (with small charts), Messages (experience and education, as SMS), Highlights, Snake, Contacts, CV and Settings (language, key tones, backlight colour). English and French.
 
-## Rebuild `app.js` after editing `src/`
+## Files
+
+| Path | What it is |
+| --- | --- |
+| `index.html`, `phone.css` | Page, start screen and the buttons around the 3D view |
+| `app.js` | The built app (three.js + everything in `src/`) |
+| `contact.json` | E-mail address and phone number shown in Contacts and used by Reply |
+| `assets/office.glb` | The 3D model (meshopt-compressed) |
+| `assets/*.webp` | Lighting baked in Blender for the phone, the props, the desk and the floor shadow |
+| `src/` | App source: `main.js` (3D scene, camera, touch), `content.js` (all texts, EN/FR), `lcd/` (pixel font, screen, phone software, Snake) |
+| `blender/` | Python scripts that model the scene and bake its lighting with Blender 4.2 |
+
+## Change the texts
+
+Edit `src/content.js` (or `contact.json` for the e-mail and phone number), then rebuild:
 
 ```bash
 cd phone
@@ -15,5 +29,16 @@ npx esbuild src/main.js --bundle --minify --format=esm --target=es2019 --legal-c
 ```
 
 Then bump `app.js?v=` in `index.html` so browsers load the new file.
+
+## Rebuild the 3D scene
+
+```bash
+pip install bpy==4.2.0 pillow numpy      # Blender as a Python module (Python 3.11)
+python blender/build_scene.py            # models the desk, props and phone -> scene.blend
+python blender/bake.py --size 2048 --spp 64   # bakes lighting -> out/*.png + out/office.glb
+npx gltfpack -i out/office.glb -o assets/office.glb -cc -kn -km -kv -vtf
+```
+
+Convert the baked PNGs to WebP (`phone`, `props`, `room`, and `floor_ratio` saved as `floor.webp`) into `assets/`.
 
 three.js is © its authors, MIT License.

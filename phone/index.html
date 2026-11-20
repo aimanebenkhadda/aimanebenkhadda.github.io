@@ -1,119 +1,65 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<meta name="theme-color" content="#251b45" />
-<title>Aïmane Benkhadda · Business Intelligence Analyst · Phone</title>
-<meta name="description" content="The phone version of Aïmane Benkhadda's 3D portfolio: a terrace table in Agadir at sunset and a phone running AïmaneOS. SQL, Python and Power BI projects, in English and French." />
-<link rel="canonical" href="https://aimanebenkhadda.github.io/phone/" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://aimanebenkhadda.github.io/phone/" />
-<meta property="og:title" content="Aïmane Benkhadda · Business Intelligence Analyst" />
-<meta property="og:description" content="Pick up my phone: data projects, CV and contact in AïmaneOS. EN / FR." />
-<meta property="og:image" content="https://aimanebenkhadda.github.io/images/preview.jpg" />
-<link rel="icon" href="../images/favicon-32x32.png" type="image/png" />
-<link rel="apple-touch-icon" href="../images/apple-touch-icon.png" />
-<link rel="stylesheet" href="phone.css?v=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Aïmane Benkhadda · Phone</title>
+<meta name="description" content="Aïmane Benkhadda, Business Intelligence Analyst. Pick up the old phone on the desk to see his projects, experience and CV.">
+<meta name="theme-color" content="#e9e2d6">
+<link rel="icon" href="../favicon.ico">
+<link rel="stylesheet" href="phone.css?v=ab95-1">
 </head>
-<body data-stage="intro">
+<body data-mode="start">
+<canvas id="scene"></canvas>
 
-<canvas id="scene" aria-label="3D terrace table with a phone"></canvas>
-
-<!-- top-left label, like the computer version -->
-<div id="topbar">
-  <div class="tb-row"><span class="tb-tag">Aïmane Benkhadda</span></div>
-  <div class="tb-row"><span class="tb-tag" data-t="sub"></span></div>
-  <div class="tb-row">
-    <button id="top-lang" class="tb-tag tb-btn" type="button"><span data-lang="en">EN</span> / <span data-lang="fr">FR</span></button>
-    <a id="skip" class="tb-tag tb-btn" data-t="skip" href="../os/"></a>
+<section id="start">
+  <div class="lang-row" role="group" aria-label="Language">
+    <button data-lang="en" aria-pressed="true">EN</button><button data-lang="fr" aria-pressed="false">FR</button>
   </div>
-</div>
-
-<div id="hint"><span data-t="hint"></span><i class="blink"></i></div>
-<button id="pickup" type="button" data-t="pickup"></button>
-
-<!-- start screen -->
-<div id="start">
-  <div class="start-box">
-    <p class="start-title" data-t="title"></p>
-    <p class="start-sub" data-t="sub"></p>
-    <div class="start-lang">
-      <span data-t="language"></span>
-      <button type="button" data-lang="en">English</button>
-      <button type="button" data-lang="fr">Français</button>
+  <div class="card">
+    <div class="screen">
+      <canvas id="title" aria-label="Aïmane Benkhadda"></canvas>
     </div>
-    <p class="start-warn" data-t="intro1"></p>
-    <p class="start-warn" data-t="intro2"></p>
-    <button id="start-btn" type="button" data-t="start"></button>
-    <a id="quick" class="start-link" href="../os/" data-t="quick"></a>
-    <a id="desk" class="start-link start-link-2" href="../?desk=1" data-t="desk"></a>
+    <p class="role" data-t="title">Business Intelligence Analyst</p>
+    <p class="tag" data-t="tagline">Portfolio · 2026</p>
+    <div class="charge">
+      <div id="bar"><i></i></div>
+      <span data-t="loading">Charging…</span>
+    </div>
+    <button id="go" disabled><span data-t="start">Pick up the phone</span></button>
+    <nav class="alt">
+      <a id="q-desk" href="../?desk=1" data-t="desktop">Desktop version</a>
+      <span aria-hidden="true">·</span>
+      <a id="q-quick" href="../os/" data-t="quick">Quick version</a>
+    </nav>
   </div>
-</div>
+</section>
 
-<!-- the phone: AïmaneOS Phone -->
-<div id="device" data-screen="lock" hidden>
-  <div class="statusbar">
-    <span id="sb-time"></span>
-    <span class="sb-os">AïmaneOS</span>
-    <span class="sb-right">
-      <button id="sb-lang" type="button">EN</button>
-      <svg class="sb-signal" viewBox="0 0 16 10" shape-rendering="crispEdges" aria-hidden="true"><rect x="0" y="7" width="3" height="3"/><rect x="4" y="5" width="3" height="5"/><rect x="8" y="3" width="3" height="7"/><rect x="12" y="0" width="3" height="10"/></svg>
-      <svg class="sb-batt" viewBox="0 0 22 10" shape-rendering="crispEdges" aria-hidden="true"><rect x="0" y="0" width="19" height="10"/><rect x="1" y="1" width="17" height="8" fill="#000"/><rect x="2" y="2" width="12" height="6"/><rect x="19" y="3" width="2" height="4"/></svg>
-    </span>
+<header id="hud">
+  <div id="who">
+    <strong>Aïmane Benkhadda</strong>
+    <span data-t="title">Business Intelligence Analyst</span>
   </div>
-
-  <section id="lock" class="screen">
-    <div class="lock-clock">
-      <div id="lock-date"></div>
-      <div id="lock-time"></div>
+  <button id="back" aria-label="Back to the desk"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-t="back">Desk</span></button>
+  <div class="tools">
+    <div class="lang-row" role="group" aria-label="Language">
+      <button data-lang="en" aria-pressed="true">EN</button><button data-lang="fr" aria-pressed="false">FR</button>
     </div>
-    <div class="notif">
-      <span id="notif-icon" class="notif-icon"></span>
-      <div class="notif-text">
-        <div class="notif-head"><b>Aïmane Benkhadda</b><span data-t="notifApp"></span></div>
-        <div data-t="notif"></div>
-      </div>
-    </div>
-    <div class="lock-bottom">
-      <button id="unlock" type="button" data-t="unlock"></button>
-      <button id="putdown" class="chip" type="button" data-t="down"></button>
-    </div>
-  </section>
+    <button id="sound" aria-pressed="true" aria-label="Key tones">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h3l4-3v10l-4-3H2z" fill="currentColor"/><path class="w" d="M11.5 5.5a3.5 3.5 0 0 1 0 5M13 3.8a6 6 0 0 1 0 8.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path class="x" d="m11 6 4 4m0-4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+</header>
 
-  <section id="home" class="screen">
-    <div class="widget">
-      <div class="widget-bar"><span id="widget-icon" class="widget-icon"></span><span data-t="widgetTitle"></span></div>
-      <div class="widget-body">
-        <img src="../app/img/aimane.webp" alt="Aïmane Benkhadda" width="72" height="72" />
-        <div>
-          <div class="w-name">Aïmane Benkhadda</div>
-          <div class="w-title" data-t="sub"></div>
-          <div class="w-open"><i></i><span data-t="openTo"></span></div>
-        </div>
-      </div>
-    </div>
-    <div id="grid" class="grid"></div>
-    <button id="putdown-home" class="chip chip-home" type="button" data-t="down"></button>
-    <div id="dock" class="dock"></div>
-  </section>
+<div id="tag"><span data-t="tapPhone">Tap the phone</span></div>
+<p id="hint" data-t="hint">Tap the screen or the keys · swipe to scroll</p>
+<nav id="links">
+  <a href="../?desk=1" data-t="desktop" onclick="this.href='../?desk=1&lang='+document.documentElement.lang">Desktop version</a>
+  <span aria-hidden="true">·</span>
+  <a href="../os/" data-t="quick" onclick="this.href='../os/?lang='+document.documentElement.lang">Quick version</a>
+</nav>
 
-  <section id="app" class="screen">
-    <header class="app-bar">
-      <button id="app-back" type="button" aria-label="Home">‹</button>
-      <span id="app-icon" class="app-bar-icon"></span>
-      <span id="app-title"></span>
-    </header>
-    <div class="app-body">
-      <iframe id="osframe" title="AïmaneOS"></iframe>
-      <div class="app-loading"><span data-t="loading"></span></div>
-    </div>
-  </section>
-
-  <button id="homebar" type="button" aria-label="Home"><span></span></button>
-</div>
-
-<noscript><p style="color:#fff;font-family:monospace;padding:24px">Aïmane Benkhadda · Business Intelligence Analyst · <a style="color:#f2c811" href="../os/">Open the simple version</a></p></noscript>
-<script type="module" src="app.js?v=1"></script>
+<noscript><p class="nojs">This page needs JavaScript. <a href="../os/">Open the quick version</a>.</p></noscript>
+<script type="module" src="app.js?v=ab95-1"></script>
 </body>
 </html>

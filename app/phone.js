@@ -9,7 +9,7 @@
     "(max-width: 767px), (pointer: coarse) and (max-height: 520px)"
   );
 
-  // Phones get their own version: a terrace table in Agadir and a phone running AïmaneOS.
+  // Phones get their own version: an old office desk with the AB-95, a retro phone you can use.
   // "?desk=1" keeps the 3D desk on a phone (for people who want the computer version).
   if (phoneQuery.matches && !/[?&]desk=1/.test(location.search)) {
     var l = "en";
