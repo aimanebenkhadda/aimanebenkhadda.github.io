@@ -174,6 +174,17 @@
     clearTimeout(openTimer);
   });
 
+  // The "Click anywhere to begin" hint, so it can step aside for the button.
+  function hintBox() {
+    var ps = document.querySelectorAll("#ui p");
+    for (var i = 0; i < ps.length; i++) {
+      if (/^(Click anywhere to begin|Cliquez n’importe où pour commencer)/.test(ps[i].textContent)) {
+        return ps[i].parentElement;
+      }
+    }
+    return null;
+  }
+
   // Show the "turn on" button when the camera rests at the desk.
   setInterval(function () {
     if (!openBtn) return;
@@ -184,11 +195,14 @@
       c &&
       !c.targetKeyframe &&
       c.currentKeyframe === "desk";
+    var hint = isPhone() ? hintBox() : null;
     if (ready) {
       refreshText();
       openBtn.classList.add("show");
+      if (hint) hint.style.visibility = "hidden";
     } else {
       openBtn.classList.remove("show");
+      if (hint && c && c.currentKeyframe === "idle") hint.style.visibility = "";
     }
     if (isOpen && !isPhone()) closeScreen();
   }, 300);
