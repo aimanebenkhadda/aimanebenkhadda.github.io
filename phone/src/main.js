@@ -11,7 +11,7 @@ import { T, LINKS } from './content.js';
 import { FB } from './lcd/fb.js';
 import { PHOTO } from './lcd/photo.js';
 
-const V = '3';
+const V = '4';
 const BG_HEX = '#e9e2d6';
 const $ = s => document.querySelector(s);
 const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem('ab95.' + k); localStorage.setItem('ab95.' + k, v); } catch (e) { return null; } };

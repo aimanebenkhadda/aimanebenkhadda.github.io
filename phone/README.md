@@ -37,7 +37,7 @@ Then bump `app.js?v=` in `index.html` so browsers load the new file.
 pip install bpy==4.2.0 pillow numpy      # Blender as a Python module (Python 3.11)
 python blender/build_scene.py            # models the desk, props and phone -> scene.blend
 python blender/bake.py --size 2048 --spp 64   # bakes lighting -> out/*.png + out/office.glb
-npx gltfpack -i out/office.glb -o assets/office.glb -cc -kn -km -kv -vtf
+npx gltfpack -i out/office.glb -o assets/office.glb -cc -kn -km -kv -vtf -vpf
 ```
 
 Run `python blender/dilate.py out/office.glb out` to fill the empty texels, then convert the `*_filled.png` files to WebP (`phone`, `props`, `room`, and `floor_ratio` saved as `floor.webp`) into `assets/`.
