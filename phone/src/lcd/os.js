@@ -110,7 +110,12 @@ class Idle extends Screen {
     if (y > 100 && this.os.unread.size) return this.key('soft_r');
     this.key('ok');
   }
-  tick() { return true; }
+  tick() {
+    const d = new Date(), k = d.getHours() * 60 + d.getMinutes() + '|' + this.os.unread.size + '|' + this.os.o.lang;
+    if (k === this.k) return false;
+    this.k = k;
+    return true;
+  }
   draw(fb) {
     const L = this.L, now = new Date();
     // status bar: signal on the left, battery on the right
@@ -123,7 +128,7 @@ class Idle extends Screen {
     fb.hline(0, 11, W);
     // clock
     const hh = String(now.getHours()).padStart(2, '0'), mm = String(now.getMinutes()).padStart(2, '0');
-    const colon = now.getSeconds() % 2 === 0 ? ':' : ' ';
+    const colon = ':';
     const cw = fb.textWidth('00:00', { scale: 3, bold: true });
     const cx = Math.round((W - cw) / 2);
     let x = fb.text(hh, cx, 14, { scale: 3, bold: true });
@@ -140,7 +145,7 @@ class Idle extends Screen {
     const n = this.os.unread.size;
     if (n) {
       const y = 104;
-      const blink = Math.floor(performance.now() / 600) % 2;
+      const blink = 1;
       const label = L.newMsgs(n);
       const w = fb.textWidth(label) + 11;
       const x0 = Math.round((W - w) / 2);

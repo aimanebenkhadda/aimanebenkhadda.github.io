@@ -47,7 +47,7 @@ renderer.toneMapping = THREE.NoToneMapping;
 const scene = new THREE.Scene();
 const BG = new THREE.Color(BG_HEX);
 scene.background = BG;
-const camera = new THREE.PerspectiveCamera(40, 1, 0.12, 12);   // near plane at 12 cm: keeps the tiny key labels from flickering on phones with a 16-bit depth buffer
+const camera = new THREE.PerspectiveCamera(40, 1, 0.18, 12);   // near plane at 12 cm: keeps the tiny key labels from flickering on phones with a 16-bit depth buffer
 
 // ------------------------------------------------------------------ loading
 const manager = new THREE.LoadingManager();
@@ -428,7 +428,8 @@ canvas.addEventListener('pointerdown', e => {
   canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId);
 });
 canvas.addEventListener('pointermove', e => {
-  pointer.x = e.clientX / window.innerWidth - 0.5; pointer.y = e.clientY / window.innerHeight - 0.5;
+  // a gentle parallax for mouse users only; on touch screens the camera stays perfectly still
+  if (e.pointerType === 'mouse') { pointer.x = e.clientX / window.innerWidth - 0.5; pointer.y = e.clientY / window.innerHeight - 0.5; }
   if (!ptr || ptr.id !== e.pointerId) return;
   const dx = e.clientX - ptr.x, dy = e.clientY - ptr.y;
   ptr.moved = Math.max(ptr.moved, Math.hypot(e.clientX - ptr.ax, e.clientY - ptr.ay));
@@ -528,7 +529,7 @@ function frame(now) {
   // idle sway in the desk view
   const t = now / 1000;
   const swayOn = mode === 'desk' || mode === 'intro' ? 1 : 0;
-  sway.lerp(tmp.set(Math.sin(t * 0.33) * 0.008 + pointer.x * 0.02, Math.sin(t * 0.27) * 0.004 - pointer.y * 0.01, 0).multiplyScalar(swayOn), Math.min(1, dt * 2));
+  sway.lerp(tmp.set(pointer.x * 0.015, -pointer.y * 0.008, 0).multiplyScalar(swayOn), Math.min(1, dt * 2));
   camera.position.copy(cam.pos).add(sway);
   camera.up.copy(cam.up);
   if (camera.fov !== cam.fov) { camera.fov = cam.fov; camera.updateProjectionMatrix(); }

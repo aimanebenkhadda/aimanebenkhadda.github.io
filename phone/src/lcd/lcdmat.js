@@ -47,10 +47,15 @@ export function makeLcd() {
         vec2 uv = (vUv - uPad) / (1.0 - 2.0 * uPad);
         vec2 p = uv * uRes;   // glTF uv: v = 0 at the top of the screen
         vec2 aa = fwidth(p) * 0.75;
+        // when the screen is small (seen from the desk) the dot pattern is finer than the
+        // display's own pixels: blend to plain, filled pixels so nothing shimmers
+        float big = smoothstep(1.4, 2.8, 1.0 / max(max(fwidth(p.x), fwidth(p.y)), 1e-4));
         vec2 id = floor(p), cell = fract(p);
-        float on = px(id) * dotMask(cell, aa);
+        vec2 b0 = floor(p - 0.5), bf = fract(p - 0.5);   // soft (bilinear) version for small sizes
+        float soft = mix(mix(px(b0), px(b0 + vec2(1.0, 0.0)), bf.x), mix(px(b0 + vec2(0.0, 1.0)), px(b0 + vec2(1.0, 1.0)), bf.x), bf.y);
+        float on = mix(soft, px(id) * dotMask(cell, aa), big);
         vec2 q = p - vec2(0.28, 0.32);
-        float sh = px(floor(q)) * dotMask(fract(q), aa * 1.6);
+        float sh = px(floor(q)) * dotMask(fract(q), aa * 1.6) * big;
         // backlight: brighter centre, darker edges
         vec2 c = vUv - 0.5;
         float vig = smoothstep(0.75, 0.15, length(c * vec2(1.0, 0.85)));
@@ -58,7 +63,7 @@ export function makeLcd() {
         vec3 off = uEdge * vec3(0.32, 0.36, 0.3);
         vec3 col = mix(off, base, uLight);
         float inside = step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0);
-        col = mix(col, col * 0.93, dotMask(cell, aa) * 0.5 * inside);     // faint unlit grid
+        col = mix(col, col * 0.93, dotMask(cell, aa) * 0.5 * inside * big);     // faint unlit grid
         col = mix(col, uInk * 1.4 + col * 0.25, sh * 0.22 * inside);       // pixel shadow on the backplate
         col = mix(col, uInk, on * inside * mix(0.85, 1.0, uLight));
         // glass sheen
